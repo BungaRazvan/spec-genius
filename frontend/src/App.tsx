@@ -4,10 +4,12 @@ import "./styles/global.css";
 import { Button } from "@/components/ui/button";
 import { BrowserRouter, Routes, Route, Link } from "react-router-dom";
 
+import Login from "@/components/pages/Login";
+
 function App() {
   return (
     <div className="App">
-      <Routes></Routes>
+      <Login />
     </div>
   );
 }
