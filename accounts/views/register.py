@@ -12,8 +12,16 @@ class RegisterView(APIView):
 
         if serializer.is_valid():
             user = serializer.save()
-            token = create_jwt(user)
+            access, refresh = create_jwt(user)
 
-            return Response({"token": token}, status=status.HTTP_201_CREATED)
+            res = Response({"user": {"email": user.email}})
+            res.set_cookie(
+                "access_token", access, httponly=True, samesite="Strict", secure=False
+            )
+            res.set_cookie(
+                "refresh_token", refresh, httponly=True, samesite="Strict", secure=False
+            )
+
+            return res
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

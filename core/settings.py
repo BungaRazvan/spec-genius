@@ -30,10 +30,8 @@ SECRET_KEY = env("SECRET_KEY")
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = env("DEBUG", default=False)
 
-CORS_ORIGIN_ALLOW_ALL = True
 
-
-ALLOWED_HOSTS = ["spec-genius.local", "127.0.0.1"]
+ALLOWED_HOSTS = ["spec-genius.local", "127.0.0.1", "localhost"]
 
 
 # Application definition
@@ -49,6 +47,7 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     # 3rd party
     "rest_framework",
+    "corsheaders",
 ]
 
 MIDDLEWARE = [
@@ -59,7 +58,11 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    "corsheaders.middleware.CorsMiddleware",
 ]
+
+CORS_ALLOW_ALL_ORIGINS = env("CORS_ALLOW_ALL_ORIGINS", default=False)
+
 
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTIFICATION_CLASSES": [

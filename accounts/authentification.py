@@ -12,15 +12,11 @@ class UserJWTAuthentification(BaseAuthentication):
     keyword = "Bearer"
 
     def authenticate(self, request: HttpRequest) -> Union[None, Tuple[User, None]]:
-        auth_header = request.headers.get("Autorization")
+        token = request.COOKIES.get("access_token")
 
-        if not auth_header:
+        if not token:
             return None
 
-        if not auth_header.startswith(self.keyword):
-            raise AuthenticationFailed("Invalid token")
-
-        token = auth_header.replace(self.keyword, "").strip()
         payload = verify_jwt(token)
 
         if not payload:

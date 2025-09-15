@@ -19,7 +19,17 @@ class LoginView(APIView):
             )
 
         if user.check_password(pwd) and user.is_active:
-            return Response({"token": create_jwt(user)})
+            access, refresh = create_jwt(user)
+            response = Response()
+
+            response.set_cookie(
+                "access_token", access, httponly=True, samesite="Strict", secure=False
+            )
+            response.set_cookie(
+                "refresh_token", refresh, httponly=True, samesite="Strict", secure=False
+            )
+
+            return response
 
         return Response(
             {"detail": "Invalid credentials"}, status=status.HTTP_401_UNAUTHORIZED
