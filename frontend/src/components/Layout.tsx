@@ -1,18 +1,16 @@
 import { Outlet } from "react-router-dom";
-import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
-
+import { SidebarProvider } from "@/components/ui/sidebar";
 import AppSidebar from "components/Sidebar";
 
-const Layout = () => {
+export default function Layout() {
   return (
     <SidebarProvider>
-      <AppSidebar />
-      <main>
-        <SidebarTrigger />
-        <Outlet />
-      </main>
+      <div className="flex min-h-screen w-full">
+        <AppSidebar />
+        <main className="flex-1 p-4">
+          <Outlet />
+        </main>
+      </div>
     </SidebarProvider>
   );
-};
-
-export default Layout;
+}
