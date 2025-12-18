@@ -11,7 +11,7 @@ import { createInjector, createStore } from "reslice";
 import { Provider } from "react-redux";
 import { applyMiddleware, compose } from "redux";
 
-import reducer from "./ducks";
+import reducer from "./store/ducks";
 
 const composeEnhancers =
   (window as any).__REDUX_DEVTOOLS_EXTENSION_COMPOSE__ || compose;

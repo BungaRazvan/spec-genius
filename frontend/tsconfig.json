@@ -4,7 +4,12 @@
     "lib": ["dom", "dom.iterable", "esnext"],
     "baseUrl": ".",
     "paths": {
-      "@/*": ["./*"]
+      "@/*": ["./*"],
+      "@/lib/*": ["./src/lib/*"],
+      "ui/*": ["./components/ui/*"],
+      "components/*": ["./src/components/*"],
+      "lib/*": ["./src/lib/*"],
+      "pages/*": ["./src/pages/*"]
     },
     "allowJs": true,
     "skipLibCheck": true,
@@ -20,5 +25,5 @@
     "noEmit": true,
     "jsx": "react-jsx"
   },
-  "include": ["src", "lib"]
+  "include": ["src", "src/lib"]
 }

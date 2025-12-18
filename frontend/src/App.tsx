@@ -1,13 +1,22 @@
-import React from "react";
 import "./index.css";
-import "./styles/global.css";
+import "./styles/globals.css";
 
-import Login from "@/components/pages/Login";
+import { Routes, Route } from "react-router-dom";
+
+import Login from "pages/Login";
+import Dashboard from "pages/Dashboard";
+import Layout from "components/Layout";
 
 function App() {
   return (
     <div className="App">
-      <Login />
+      <Routes>
+        <Route path="/signin" Component={Login}></Route>
+
+        <Route path="/" element={<Layout />}>
+          <Route path="dashboard" Component={Dashboard}></Route>
+        </Route>
+      </Routes>
     </div>
   );
 }

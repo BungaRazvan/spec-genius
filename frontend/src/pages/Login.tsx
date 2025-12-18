@@ -1,32 +1,17 @@
 import React, { useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "ui/input";
+import { useNavigate } from "react-router-dom";
 
 const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    try {
-      const abc = async (email: string, password: string) => {
-        const res = await fetch("http://localhost:8000/auth/login/", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email, password }),
-        });
-        if (!res.ok) throw new Error("Login failed");
-        const data = await res.json();
 
-        console.log(data);
-      };
-
-      await abc(email, password);
-    } catch (err) {
-      setError("Invalid credentials");
-    }
+    navigate("/dashboard");
   };
 
   return (
@@ -62,12 +47,11 @@ const Login = () => {
                 Email address
               </label>
               <div className="mt-2">
-                <input
+                <Input
                   type="email"
                   name="email"
                   id="email"
                   autoComplete="email"
-                  className="block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
@@ -86,7 +70,7 @@ const Login = () => {
                 <div className="mt-2">
                   <a
                     href="#"
-                    className="font-semibold text-indigo-600 hover:text-indigo-500"
+                    className="text-sm/6 font-semibold text-indigo-600 hover:text-indigo-500"
                   >
                     Forgot Password?
                   </a>
@@ -94,12 +78,11 @@ const Login = () => {
               </div>
 
               <div className="mt-2">
-                <input
+                <Input
                   type="password"
                   name="password"
                   id="password"
                   autoComplete="current-password"
-                  className="block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required

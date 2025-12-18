@@ -1,4 +1,4 @@
-import { createActions } from "@/lib/utils";
+import { createActions } from "@/src/lib/utils";
 
 const actionTypes = createActions("AUTH", [
   "LOGIN_REQUEST",
