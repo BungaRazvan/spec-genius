@@ -1,27 +1,120 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Separator } from "@/components/ui/separator";
+import {
+  Card,
+  CardContent,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Trash2, Share2, Plus, FileText, Search } from "lucide-react";
 
 const Dashboard = () => {
+  // Mock data for cleaner rendering logic
+  const recentDocs = [
+    { id: 1, title: "Project Specs v1" },
+    { id: 2, title: "API Documentation" },
+    { id: 3, title: "User Research" },
+  ];
+
   return (
-    <div className="w-full bg-card p-4">
-      <header className="flex items-center gap-4">
-        <h1 className="text-lg font-medium text-foreground">Specs</h1>
+    <div className="min-h-screen bg-slate-50/50 dark:bg-background">
+      {/* Header */}
+      <header className="sticky top-0 z-10 border-b bg-background/95 backdrop-blur">
+        <div className="container flex h-16 items-center justify-between px-4">
+          <div className="flex items-center gap-6">
+            <h1 className="text-xl font-bold tracking-tight text-primary">
+              Specs
+            </h1>
+            <nav className="flex items-center gap-2">
+              <Button size="sm" className="gap-2">
+                <Plus className="h-4 w-4" /> New doc
+              </Button>
+              <Button size="sm" variant="outline">
+                Validate doc
+              </Button>
+            </nav>
+          </div>
 
-        <div className="flex gap-2">
-          <Button>New doc</Button>
-          <Button>Validate doc</Button>
-        </div>
-
-        {/* Spacer to push search input to the right */}
-        <div className="flex-1"></div>
-
-        <div className="w-64">
-          <Input placeholder="Search documents" />
+          <div className="relative w-full max-w-sm">
+            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+            <Input
+              type="search"
+              placeholder="Search documents..."
+              className="w-full bg-muted/50 pl-9 focus-visible:bg-background"
+            />
+          </div>
         </div>
       </header>
 
-      <Separator className="my-4" />
+      {/* Main Content */}
+      <main className="container w-100 p-6 space-y-10">
+        {/* Recent Docs Section */}
+        <section>
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-lg font-semibold tracking-tight">
+              Recent docs
+            </h2>
+            <Button variant="ghost" size="sm" className="text-muted-foreground">
+              View all
+            </Button>
+          </div>
+
+          <div className="grid grid-cols-2 gap-6 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2">
+            {recentDocs.map((doc) => (
+              <Card
+                key={doc.id}
+                className="group transition-all hover:shadow-md hover:border-primary/20"
+              >
+                <CardHeader className="space-y-1">
+                  <div className="mb-2 flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                    <FileText className="h-5 w-5" />
+                  </div>
+                  <CardTitle className="text-base">{doc.title}</CardTitle>
+                </CardHeader>
+
+                <CardFooter className="border-t bg-muted/5 px-6 py-3 flex justify-between">
+                  <span className="text-xs text-muted-foreground">
+                    Edited 2h ago
+                  </span>
+                  <div className="flex gap-1">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8 text-muted-foreground hover:text-primary"
+                    >
+                      <Share2 className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </CardFooter>
+              </Card>
+            ))}
+          </div>
+        </section>
+
+        {/* My Docs Section */}
+        <section>
+          <h2 className="text-lg font-semibold tracking-tight mb-4">My docs</h2>
+          <div className="rounded-xl border border-dashed border-gray-300 dark:border-gray-800 p-12 flex flex-col items-center justify-center text-center">
+            <div className="rounded-full bg-muted p-3 mb-4">
+              <FileText className="h-6 w-6 text-muted-foreground" />
+            </div>
+            <p className="text-sm text-muted-foreground">
+              No documents found in your library.
+            </p>
+            <Button variant="link" className="mt-2">
+              Create your first spec
+            </Button>
+          </div>
+        </section>
+      </main>
     </div>
   );
 };
