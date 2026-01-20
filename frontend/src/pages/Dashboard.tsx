@@ -15,13 +15,17 @@ const Dashboard = () => {
     { id: 1, title: "Project Specs v1" },
     { id: 2, title: "API Documentation" },
     { id: 3, title: "User Research" },
+    { id: 4, title: "User Research" },
+    { id: 5, title: "User Research" },
+    { id: 6, title: "User Research" },
+    { id: 7, title: "User Research" },
   ];
 
   return (
-    <div className="min-h-screen bg-slate-50/50 dark:bg-background">
+    <div className="min-h-screen">
       {/* Header */}
       <header className="sticky top-0 z-10 border-b bg-background/95 backdrop-blur">
-        <div className="container flex h-16 items-center justify-between px-4">
+        <div className="flex h-16 items-center justify-between px-4">
           <div className="flex items-center gap-6">
             <h1 className="text-xl font-bold tracking-tight text-primary">
               Specs
@@ -48,7 +52,7 @@ const Dashboard = () => {
       </header>
 
       {/* Main Content */}
-      <main className="container w-100 p-6 space-y-10">
+      <main className="p-6 ">
         {/* Recent Docs Section */}
         <section>
           <div className="flex items-center justify-between mb-6">
@@ -60,11 +64,11 @@ const Dashboard = () => {
             </Button>
           </div>
 
-          <div className="grid grid-cols-2 gap-6 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2">
+          <div className="flex flex-row gap-6 ">
             {recentDocs.map((doc) => (
               <Card
                 key={doc.id}
-                className="group transition-all hover:shadow-md hover:border-primary/20"
+                className="group max-w-xl transition-all hover:shadow-md hover:border-primary/20"
               >
                 <CardHeader className="space-y-1">
                   <div className="mb-2 flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 text-primary">
@@ -102,7 +106,7 @@ const Dashboard = () => {
         {/* My Docs Section */}
         <section>
           <h2 className="text-lg font-semibold tracking-tight mb-4">My docs</h2>
-          <div className="rounded-xl border border-dashed border-gray-300 dark:border-gray-800 p-12 flex flex-col items-center justify-center text-center">
+          <div className="rounded-xl  max-w-xl border border-dashed border-gray-300 dark:border-gray-800 p-12 flex flex-col items-center justify-center text-center">
             <div className="rounded-full bg-muted p-3 mb-4">
               <FileText className="h-6 w-6 text-muted-foreground" />
             </div>
