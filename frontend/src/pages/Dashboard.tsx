@@ -68,7 +68,7 @@ const Dashboard = () => {
             {recentDocs.map((doc) => (
               <Card
                 key={doc.id}
-                className="group max-w-xl transition-all hover:shadow-md hover:border-primary/20"
+                className="w-40 aspect-square flex flex-col border-gray-200 shadow-sm hover:border-gray-400 transition-colors"
               >
                 <CardHeader className="space-y-1">
                   <div className="mb-2 flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 text-primary">
