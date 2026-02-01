@@ -24,6 +24,5 @@ class AppUserAuthBackend:
 
 class MyCustomJWTAuthentication(JWTAuthentication):
     def __init__(self, *args, **kwargs):
-        print("helllo")
         super().__init__(*args, **kwargs)
         self.user_model = CustomUser

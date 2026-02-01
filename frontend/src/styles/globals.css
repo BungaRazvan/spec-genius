@@ -1,5 +1,6 @@
 @import "tailwindcss";
 @import "tw-animate-css";
+@import "./table.scss";
 
 @custom-variant dark (&:is(.dark *));
 
@@ -106,4 +107,20 @@
     width: var(--sidebar-width);
     flex-shrink: 0;
   }
+}
+
+.btn-primary {
+  background: #0070f3;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+.btn-secondary {
+  background: white;
+  border: 1px solid #ccc;
+  padding: 8px 16px;
+  border-radius: 4px;
+  cursor: pointer;
 }
