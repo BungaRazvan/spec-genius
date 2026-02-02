@@ -48,18 +48,21 @@ const SpecificationDocument = () => {
         col_email: "alice@company.com",
         col_status: "Active",
         col_last_login: "2024-05-12",
+        id: 1,
       },
       {
         col_name: "Bob Smith",
         col_email: "bob@hr.org",
         col_status: "Pending",
         col_last_login: "2024-05-10",
+        id: 2,
       },
       {
         col_name: "Charlie Davis",
         col_email: "charlie@tech.io",
         col_status: "Active",
         col_last_login: "2024-05-14",
+        id: 3,
       },
     ],
   };

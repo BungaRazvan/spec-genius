@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import {
   useReactTable,
   getCoreRowModel,
@@ -20,9 +20,34 @@ import {
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 
+export const InsertColumnZone = (props) => {
+  const { onAdd } = props;
+
+  return (
+    /* Moved further right and increased z-index to 9999 */
+    <div className="absolute right-[-14px] top-0 h-full w-[28px] z-[9999] group/insertv cursor-default !overflow-visible">
+      {/* The Line */}
+      <div className="absolute inset-y-0 left-1/2 w-[2px] bg-blue-500 opacity-0 group-hover/insertv:opacity-100 transition-opacity pointer-events-none" />
+
+      {/* The Button */}
+      <button
+        onClick={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          onAdd();
+        }}
+        /* Forced high z-index and absolute centering */
+        className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 opacity-0 group-hover/insertv:opacity-100 bg-blue-600 text-white w-6 h-6 rounded-full flex items-center justify-center shadow-2xl hover:scale-125 transition-all"
+      >
+        <span className="text-xl leading-none font-bold">+</span>
+      </button>
+    </div>
+  );
+};
+
 // --- 1. Sortable Header Component (X-Axis) ---
 export const SortableHeader = (props) => {
-  const { header } = props;
+  const { header, onAddColumn, index } = props;
   const {
     attributes,
     listeners,
@@ -39,16 +64,16 @@ export const SortableHeader = (props) => {
     transition,
     width: header.getSize(),
     opacity: isDragging ? 0.8 : 1,
-    zIndex: isDragging ? 100 : 1,
+    zIndex: isDragging ? 100 : null,
   };
 
   return (
     <th
       ref={setNodeRef}
       style={style}
-      className="relative bg-slate-100 border-b p-3 text-left"
+      className="p-0 bg-slate-100 border-b relative group/header !overflow-visible"
     >
-      <div className="flex items-center gap-2">
+      <div className="relative w-full h-full p-3 flex items-center gap-2 !overflow-visible">
         <span
           {...attributes}
           {...listeners}
@@ -65,11 +90,37 @@ export const SortableHeader = (props) => {
           )}
         </div>
       </div>
+      {/* Resize Handle */}
       <div
         onMouseDown={header.getResizeHandler()}
         className="absolute right-0 top-0 h-full w-1 cursor-col-resize hover:bg-blue-500"
       />
+      {/* 2. Insert Zone: Positioned to the right, but z-index higher than resize handle */}
+      <InsertColumnZone onAdd={() => onAddColumn(index + 1)} />
     </th>
+  );
+};
+
+export const InsertColumnZone = (props) => {
+  const { onAdd, label = "+" } = props;
+
+  return (
+    <div className="absolute right-[-2px] top-0 h-full w-[6px] z-[100] group/insertv">
+      {/* The Vertical Line */}
+      <div className="absolute inset-y-0 left-1/2 w-[2px] bg-blue-500 opacity-0 group-hover/insertv:opacity-100 transition-opacity duration-200" />
+
+      {/* The Plus Button */}
+      <button
+        onClick={(e) => {
+          e.stopPropagation(); // Prevent triggering drag/sort logic
+          onAdd();
+        }}
+        className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 opacity-0 group-hover/insertv:opacity-100 bg-blue-500 text-white w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold shadow-lg hover:scale-110 transition-all z-[110]"
+        title="Add Column"
+      >
+        {label}
+      </button>
+    </div>
   );
 };
 
@@ -136,6 +187,32 @@ export const DraggableTable = (props) => {
     setColumnOrder(columns.map((c) => c.id));
   }, [columns]);
 
+  const defaultColumn: Partial<ColumnDef<Person>> = {
+    cell: ({ getValue, row: { index }, column: { id }, table }) => {
+      const initialValue = getValue();
+      // We need to keep and update the state of the cell normally
+      const [value, setValue] = useState(initialValue);
+
+      // When the input is blurred, we'll call our table meta's updateData function
+      const onBlur = () => {
+        table.options.meta?.updateData(index, id, value);
+      };
+
+      // If the initialValue is changed external, sync it up with our state
+      useEffect(() => {
+        setValue(initialValue);
+      }, [initialValue]);
+
+      return (
+        <input
+          value={value as string}
+          onChange={(e) => setValue(e.target.value)}
+          onBlur={onBlur}
+        />
+      );
+    },
+  };
+
   const table = useReactTable({
     data,
     columns: useMemo(
@@ -152,6 +229,7 @@ export const DraggableTable = (props) => {
     onColumnOrderChange: setColumnOrder,
     getCoreRowModel: getCoreRowModel(),
     getRowId: (row) => row.id, // Crucial for matching dnd-kit IDs
+    defaultColumn,
   });
 
   const sensors = useSensors(
@@ -181,6 +259,26 @@ export const DraggableTable = (props) => {
     [table.getRowModel().rows],
   );
 
+  // Handlers to modify the local state
+  const onAddRow = (index: number) => {
+    const newRow = { id: crypto.randomUUID(), name: "New Row" };
+    setData((old) => {
+      const updated = [...old];
+      updated.splice(index, 0, newRow);
+      return updated;
+    });
+  };
+
+  const onAddColumn = (index: number) => {
+    const newColId = `col-${crypto.randomUUID().slice(0, 4)}`;
+    // Note: In a real app, you'd update the 'columns' prop in the parent
+    setColumnOrder((old) => {
+      const updated = [...old];
+      updated.splice(index, 0, newColId);
+      return updated;
+    });
+  };
+
   return (
     <DndContext
       sensors={sensors}
@@ -192,13 +290,22 @@ export const DraggableTable = (props) => {
           <thead className="bg-slate-50 border-b">
             {table.getHeaderGroups().map((hg) => (
               <tr key={hg.id}>
-                <th className="w-10" />
+                <th className="w-10 bg-slate-100 border-b relative !overflow-visible">
+                  <InsertColumnZone onAdd={() => onAddColumn(0)} />
+                </th>
+                {/* <th className="w-10" /> */}
+
                 <SortableContext
                   items={columnOrder}
                   strategy={horizontalListSortingStrategy}
                 >
-                  {hg.headers.map((header) => (
-                    <SortableHeader key={header.id} header={header} />
+                  {hg.headers.map((header, index) => (
+                    <SortableHeader
+                      key={header.id}
+                      header={header}
+                      index={index}
+                      onAddColumn={onAddColumn}
+                    />
                   ))}
                 </SortableContext>
               </tr>
@@ -210,8 +317,23 @@ export const DraggableTable = (props) => {
               items={rowIds}
               strategy={verticalListSortingStrategy}
             >
-              {table.getRowModel().rows.map((row) => (
-                <SortableRow key={row.id} row={row} />
+              {table.getRowModel().rows.map((row, index) => (
+                <React.Fragment key={row.id}>
+                  {/* Line ABOVE the first row */}
+                  {index === 0 && (
+                    <InsertRowZone
+                      onAdd={() => onAddRow(0)}
+                      colSpan={columnOrder.length + 1}
+                    />
+                  )}
+                  <SortableRow key={row.id} row={row} />
+
+                  {/* Line BELOW every row */}
+                  <InsertRowZone
+                    onAdd={() => onAddRow(index + 1)}
+                    colSpan={columnOrder.length + 1}
+                  />
+                </React.Fragment>
               ))}
             </SortableContext>
           </tbody>
