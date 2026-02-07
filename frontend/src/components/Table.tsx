@@ -26,18 +26,16 @@ export const InsertColumnZone = (props) => {
   const { onAdd, label = "+" } = props;
 
   return (
-    <div className="absolute right-[-2px] top-0 h-full w-[6px] z-[100] group/insertv">
-      {/* The Vertical Line */}
+    // pointer-events-none makes the 6px area "invisible" to the mouse for resizing
+    <div className="absolute right-[-3px] top-0 h-full w-[6px] z-[50] group/insertv pointer-events-none">
       <div className="absolute inset-y-0 left-1/2 w-[2px] bg-blue-500 opacity-0 group-hover/insertv:opacity-100 transition-opacity duration-200" />
-
-      {/* The Plus Button */}
       <button
         onClick={(e) => {
-          e.stopPropagation(); // Prevent triggering drag/sort logic
+          e.stopPropagation();
           onAdd();
         }}
-        className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 opacity-0 group-hover/insertv:opacity-100 bg-blue-500 text-white w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold shadow-lg hover:scale-110 transition-all z-[110]"
-        title="Add Column"
+        // pointer-events-auto makes just the button clickable
+        className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 opacity-0 group-hover/insertv:opacity-100 bg-blue-500 text-white w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold shadow-lg hover:scale-110 transition-all z-[110] pointer-events-auto"
       >
         {label}
       </button>
@@ -46,7 +44,10 @@ export const InsertColumnZone = (props) => {
 };
 
 export const SortableHeader = (props) => {
-  const { header, onAddColumn, index } = props;
+  const { header, onAddColumn, index, onRenameColumn, onDeleteColumn } = props;
+  const [isEditing, setIsEditing] = useState(false);
+  const [title, setTitle] = useState(header.column.columnDef.header);
+
   const {
     attributes,
     listeners,
@@ -54,16 +55,19 @@ export const SortableHeader = (props) => {
     transform,
     transition,
     isDragging,
-  } = useSortable({
-    id: header.id,
-  });
+  } = useSortable({ id: header.id });
 
   const style = {
     transform: CSS.Translate.toString(transform),
     transition,
     width: header.getSize(),
     opacity: isDragging ? 0.8 : 1,
-    zIndex: isDragging ? 100 : null,
+    zIndex: isDragging ? 100 : undefined,
+  };
+
+  const handleBlur = () => {
+    setIsEditing(false);
+    onRenameColumn(header.id, title);
   };
 
   return (
@@ -72,26 +76,48 @@ export const SortableHeader = (props) => {
       style={style}
       className="p-0 bg-slate-100 border-b relative group/header !overflow-visible"
     >
-      <div className="relative w-full h-full p-3 flex items-center gap-2 !overflow-visible">
+      <div className="relative w-full h-full px-2 py-3 flex items-center justify-around gap-2 !overflow-visible">
+        {/* Left: Drag Handle */}
         <span
           {...attributes}
           {...listeners}
-          className="cursor-grab text-slate-400"
+          className="cursor-grab text-slate-400 hover:text-slate-600 min-w-[20px]"
         >
           ⠿
         </span>
-        <div className="flex flex-col">
-          <span className="font-bold text-sm">
-            {flexRender(header.column.columnDef.header, header.getContext())}
-          </span>
+
+        <div className="flex justify-center overflow-hidden">
+          {isEditing ? (
+            <input
+              autoFocus
+              className="text-sm font-bold bg-white border border-blue-500 px-1 outline-none w-full text-center"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              onBlur={handleBlur}
+              onKeyDown={(e) => e.key === "Enter" && handleBlur()}
+            />
+          ) : (
+            <span
+              className="font-bold text-sm truncate cursor-text hover:bg-slate-200 px-2 rounded text-center"
+              onClick={() => setIsEditing(true)}
+            >
+              {title}
+            </span>
+          )}
         </div>
+
+        <button
+          onClick={() => onDeleteColumn(header.id)}
+          className="opacity-0 group-hover/header:opacity-100 text-slate-400 hover:text-red-500 transition-opacity min-w-[20px]"
+        >
+          ✕
+        </button>
       </div>
-      {/* Resize Handle */}
+
       <div
         onMouseDown={header.getResizeHandler()}
-        className="absolute right-0 top-0 h-full w-1 cursor-col-resize hover:bg-blue-500"
+        className="absolute right-0 top-0 h-full w-1 cursor-col-resize hover:bg-blue-500 z-10"
       />
-      {/* 2. Insert Zone: Positioned to the right, but z-index higher than resize handle */}
       <InsertColumnZone onAdd={() => onAddColumn(index + 1)} />
     </th>
   );
@@ -149,20 +175,33 @@ export const SortableRow = (props) => {
       style={style}
       className="bg-white border-b hover:bg-slate-50"
     >
-      {/* Drag Handle: Listeners must be attached here */}
-      <td
-        {...attributes}
-        {...listeners}
-        className="p-3 cursor-grab text-slate-400 select-none w-10 text-center"
-      >
-        ⠿
+      {/* Row Controls Cell */}
+      <td className="p-3 whitespace-nowrap text-slate-400 select-none w-10 text-center border-r bg-slate-50/50">
+        <div className="flex items-center justify-center gap-2">
+          <button
+            onClick={() => onDeleteRow(row.id)}
+            className="hover:text-red-500"
+          >
+            ✕
+          </button>
+          <span
+            {...attributes}
+            {...listeners}
+            className="cursor-grab hover:text-slate-600"
+          >
+            ⠿
+          </span>
+        </div>
       </td>
+
       {row.getVisibleCells().map((cell) => (
         <td
           key={cell.id}
-          className="p-3 text-sm"
+          // ADDED: text-center to align with the centered header text
+          className="p-3 text-sm text-center"
           style={{ width: cell.column.getSize() }}
         >
+          {/* If the defaultColumn input is used, ensure that is also centered */}
           {flexRender(cell.column.columnDef.cell, cell.getContext())}
         </td>
       ))}
@@ -183,7 +222,7 @@ export const DraggableTable = (props) => {
     setColumnOrder(columns.map((c) => c.id));
   }, [columns]);
 
-  const defaultColumn: Partial<ColumnDef<Person>> = {
+  const defaultColumn = {
     cell: ({ getValue, row: { index }, column: { id }, table }) => {
       const initialValue = getValue();
       // We need to keep and update the state of the cell normally
@@ -201,6 +240,7 @@ export const DraggableTable = (props) => {
 
       return (
         <input
+          className="w-full bg-transparent outline-none focus:bg-blue-50 rounded px-1 text-center"
           value={value as string}
           onChange={(e) => setValue(e.target.value)}
           onBlur={onBlur}
@@ -222,6 +262,7 @@ export const DraggableTable = (props) => {
       [columns],
     ),
     state: { columnOrder },
+    columnResizeMode: "onChange",
     onColumnOrderChange: setColumnOrder,
     getCoreRowModel: getCoreRowModel(),
     getRowId: (row) => row.id, // Crucial for matching dnd-kit IDs
