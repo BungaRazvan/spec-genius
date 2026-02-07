@@ -20,32 +20,31 @@ import {
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 
+// --- 1. Sortable Header Component (X-Axis) ---
+
 export const InsertColumnZone = (props) => {
-  const { onAdd } = props;
+  const { onAdd, label = "+" } = props;
 
   return (
-    /* Moved further right and increased z-index to 9999 */
-    <div className="absolute right-[-14px] top-0 h-full w-[28px] z-[9999] group/insertv cursor-default !overflow-visible">
-      {/* The Line */}
-      <div className="absolute inset-y-0 left-1/2 w-[2px] bg-blue-500 opacity-0 group-hover/insertv:opacity-100 transition-opacity pointer-events-none" />
+    <div className="absolute right-[-2px] top-0 h-full w-[6px] z-[100] group/insertv">
+      {/* The Vertical Line */}
+      <div className="absolute inset-y-0 left-1/2 w-[2px] bg-blue-500 opacity-0 group-hover/insertv:opacity-100 transition-opacity duration-200" />
 
-      {/* The Button */}
+      {/* The Plus Button */}
       <button
         onClick={(e) => {
-          e.preventDefault();
-          e.stopPropagation();
+          e.stopPropagation(); // Prevent triggering drag/sort logic
           onAdd();
         }}
-        /* Forced high z-index and absolute centering */
-        className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 opacity-0 group-hover/insertv:opacity-100 bg-blue-600 text-white w-6 h-6 rounded-full flex items-center justify-center shadow-2xl hover:scale-125 transition-all"
+        className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 opacity-0 group-hover/insertv:opacity-100 bg-blue-500 text-white w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold shadow-lg hover:scale-110 transition-all z-[110]"
+        title="Add Column"
       >
-        <span className="text-xl leading-none font-bold">+</span>
+        {label}
       </button>
     </div>
   );
 };
 
-// --- 1. Sortable Header Component (X-Axis) ---
 export const SortableHeader = (props) => {
   const { header, onAddColumn, index } = props;
   const {
@@ -85,9 +84,6 @@ export const SortableHeader = (props) => {
           <span className="font-bold text-sm">
             {flexRender(header.column.columnDef.header, header.getContext())}
           </span>
-          {header.column.columnDef.meta?.isPii && (
-            <span className="text-[10px] text-red-600">PII</span>
-          )}
         </div>
       </div>
       {/* Resize Handle */}
@@ -101,26 +97,26 @@ export const SortableHeader = (props) => {
   );
 };
 
-export const InsertColumnZone = (props) => {
-  const { onAdd, label = "+" } = props;
+export const InsertRowZone = (props) => {
+  const { onAdd, colSpan, label = "New Row" } = props;
 
   return (
-    <div className="absolute right-[-2px] top-0 h-full w-[6px] z-[100] group/insertv">
-      {/* The Vertical Line */}
-      <div className="absolute inset-y-0 left-1/2 w-[2px] bg-blue-500 opacity-0 group-hover/insertv:opacity-100 transition-opacity duration-200" />
+    <tr className="group/insert relative">
+      {/* Ensure colSpan is total columns + 1 */}
+      <td colSpan={colSpan} className="p-0 border-none h-1 relative">
+        <div className="absolute inset-x-0 top-[-4px] h-2 flex items-center justify-center opacity-0 group-hover/insert:opacity-100 transition-opacity z-20">
+          {/* This line will now span the entire width of the <td> which spans the whole <tr> */}
+          <div className="absolute inset-x-0 h-[2px] bg-blue-500" />
 
-      {/* The Plus Button */}
-      <button
-        onClick={(e) => {
-          e.stopPropagation(); // Prevent triggering drag/sort logic
-          onAdd();
-        }}
-        className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 opacity-0 group-hover/insertv:opacity-100 bg-blue-500 text-white w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold shadow-lg hover:scale-110 transition-all z-[110]"
-        title="Add Column"
-      >
-        {label}
-      </button>
-    </div>
+          <button
+            onClick={onAdd}
+            className="relative bg-blue-500 text-white px-3 py-0.5 rounded-full text-[10px] font-bold uppercase shadow-md hover:scale-105 transition-transform"
+          >
+            {label}
+          </button>
+        </div>
+      </td>
+    </tr>
   );
 };
 
