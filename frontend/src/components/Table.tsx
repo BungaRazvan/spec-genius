@@ -20,6 +20,22 @@ import {
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetDescription,
+} from "@/components/ui/sheet";
+import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
+import { MessageSquare, Settings2, Trash2, Send } from "lucide-react";
+
 // --- 1. Sortable Header Component (X-Axis) ---
 
 export const InsertColumnZone = (props) => {
@@ -148,7 +164,7 @@ export const InsertRowZone = (props) => {
 
 // --- 2. Sortable Row Component (The Y-Axis) ---
 export const SortableRow = (props) => {
-  const { row } = props;
+  const { row, onOpenComments } = props;
 
   const {
     attributes,
@@ -178,11 +194,20 @@ export const SortableRow = (props) => {
       {/* Row Controls Cell */}
       <td className="p-3 whitespace-nowrap text-slate-400 select-none w-10 text-center border-r bg-slate-50/50">
         <div className="flex items-center justify-center gap-2">
-          <button
-            onClick={() => onDeleteRow(row.id)}
-            className="hover:text-red-500"
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-8 w-8 p-0 text-slate-400 hover:text-blue-600"
+            onClick={() => onOpenComments(row.original)}
           >
-            ✕
+            <MessageSquare size={14} />
+          </Button>
+
+          <button
+            // onClick={() => onDeleteRow(row.id)}
+            className="text-slate-300 hover:text-red-500"
+          >
+            <Trash2 size={14} />
           </button>
           <span
             {...attributes}
@@ -215,10 +240,14 @@ export const DraggableTable = (props) => {
 
   const [data, setData] = useState(rows);
   const [columnOrder, setColumnOrder] = useState(columns.map((c) => c.id));
-  // State for Row Comments Pull-out
-  const [commentingRow, setCommentingRow] = useState(null);
-  // State for Cell Popover
-  const [activePopover, setActivePopover] = useState(null); // { rowId, colId }
+  // Sheet State
+  const [isSheetOpen, setIsSheetOpen] = useState(false);
+  const [activeRowForComments, setActiveRowForComments] = useState(null);
+
+  const handleOpenComments = (rowOriginal) => {
+    setActiveRowForComments(rowOriginal);
+    setIsSheetOpen(true);
+  };
 
   // Sync internal state with props if they change externally
   useEffect(() => {
@@ -244,42 +273,54 @@ export const DraggableTable = (props) => {
       }, [initialValue]);
 
       return (
-        <div className="group/cell relative flex items-center justify-center">
+        <div className="group/cell relative flex items-center h-10 px-2">
           <input
-            className={`w-full bg-transparent outline-none text-center px-1`}
+            className="w-full bg-transparent outline-none text-center focus:ring-1 focus:ring-blue-200 rounded"
             value={value}
             onChange={(e) => setValue(e.target.value)}
-            onBlur={onBlur}
+            onBlur={() =>
+              table.options.meta?.updateData(row.index, column.id, value)
+            }
           />
 
-          {/* Cell Options Popover Trigger */}
-          <button
-            onClick={() =>
-              setActivePopover({ rowId: row.id, colId: column.id })
-            }
-            className="absolute right-0 opacity-0 group-hover/cell:opacity-100 p-1 text-slate-400 hover:text-blue-600"
-          >
-            ⚙️
-          </button>
-
-          {activePopover?.rowId === row.id &&
-            activePopover?.colId === column.id && (
-              <div className="absolute top-full right-0 mt-1 w-40 bg-white border shadow-xl z-[200] rounded-md p-2 text-left">
-                <div className="text-[10px] font-bold text-slate-400 uppercase mb-1">
-                  Column Settings
-                </div>
-                <label className="flex items-center gap-2 text-xs cursor-pointer hover:bg-slate-50 p-1 rounded"></label>
-                <button className="w-full text-left text-xs p-1 hover:bg-slate-50 rounded">
-                  Custom Props...
-                </button>
-                <button
-                  onClick={() => setActivePopover(null)}
-                  className="w-full mt-2 text-[10px] text-center text-slate-400 hover:text-slate-600 border-t pt-1"
+          <div className="absolute right-1 opacity-0 group-hover/cell:opacity-100 transition-opacity">
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="ghost"
+                  className="h-6 w-6 p-0 hover:bg-slate-200"
                 >
-                  Close
-                </button>
-              </div>
-            )}
+                  <Settings2 size={12} />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-64 p-4" align="end">
+                <div className="space-y-4">
+                  <div className="space-y-1">
+                    <h4 className="font-semibold text-sm leading-none">
+                      Cell Properties
+                    </h4>
+                    <p className="text-xs text-muted-foreground">
+                      Apply custom data constraints.
+                    </p>
+                  </div>
+                  <div className="grid gap-3">
+                    <div className="flex items-center space-x-2">
+                      <Checkbox id="pii" />
+                      <label htmlFor="pii" className="text-sm font-medium">
+                        Contains PII
+                      </label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <Checkbox id="encrypt" />
+                      <label htmlFor="encrypt" className="text-sm font-medium">
+                        End-to-end Encryption
+                      </label>
+                    </div>
+                  </div>
+                </div>
+              </PopoverContent>
+            </Popover>
+          </div>
         </div>
       );
     },
@@ -399,7 +440,11 @@ export const DraggableTable = (props) => {
                       colSpan={columnOrder.length + 1}
                     />
                   )}
-                  <SortableRow key={row.id} row={row} />
+                  <SortableRow
+                    key={row.id}
+                    row={row}
+                    onOpenComments={handleOpenComments}
+                  />
 
                   {/* Line BELOW every row */}
                   <InsertRowZone
@@ -413,50 +458,55 @@ export const DraggableTable = (props) => {
         </table>
       </div>
 
-      {commentingRow && (
-        <div className="absolute right-0 top-0 h-full w-80 bg-slate-50 border-l shadow-2xl z-[300] flex flex-col animate-in slide-in-from-right">
-          <div className="p-4 border-b bg-white flex justify-between items-center">
-            <h3 className="font-bold text-sm text-slate-700">
-              Comments: {commentingRow.name}
-            </h3>
-            <button
-              onClick={() => setCommentingRow(null)}
-              className="text-slate-400 hover:text-slate-600"
-            >
-              ✕
-            </button>
-          </div>
-          <div className="flex-1 overflow-y-auto p-4 space-y-4">
-            {/* Mock Comment Threads */}
-            <div className="bg-white p-3 rounded border shadow-sm text-sm">
-              <div className="font-bold text-blue-600 text-xs mb-1">System</div>
-              <p className="text-slate-600 text-xs">
-                This row was created on {new Date().toLocaleDateString()}.
-              </p>
-            </div>
-            <div className="bg-white p-3 rounded border shadow-sm">
-              <textarea
-                className="w-full text-xs outline-none resize-none"
-                placeholder="Add a comment..."
-                rows={3}
-              />
-              <button className="mt-2 text-[10px] bg-blue-500 text-white px-2 py-1 rounded font-bold">
-                REPLY
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
+        <SheetContent className="w-[400px] sm:w-[450px] flex flex-col p-0">
+          <SheetHeader className="p-6 border-b bg-slate-50/50">
+            <SheetTitle className="flex items-center gap-2">
+              <MessageSquare className="w-5 h-5 text-blue-500" />
+              Row Activity
+            </SheetTitle>
+            <SheetDescription>
+              Viewing comments and audit logs for row:{" "}
+              <span className="font-mono text-blue-600"></span>
+            </SheetDescription>
+          </SheetHeader>
 
-      {/* Click-away backdrop for Popovers/Comments */}
-      {(activePopover || commentingRow) && (
-        <div
-          className="fixed inset-0 z-[150]"
-          onClick={() => {
-            setActivePopover(null);
-          }}
-        />
-      )}
+          <div className="flex-1 overflow-y-auto p-6 space-y-6">
+            {/* Mock Comment Thread */}
+            <div className="space-y-4">
+              <div className="flex gap-3">
+                <div className="w-8 h-8 rounded-full bg-slate-200 flex-shrink-0 flex items-center justify-center text-xs font-bold">
+                  JD
+                </div>
+                <div className="flex-1 space-y-1">
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm font-bold">Jane Doe</span>
+                    <span className="text-[10px] text-slate-400">12:45 PM</span>
+                  </div>
+                  <div className="p-3 rounded-2xl rounded-tl-none bg-slate-100 text-sm text-slate-700">
+                    Should we mark the 'Email' column as PII for this row?
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="p-6 border-t bg-white">
+            <div className="relative">
+              <textarea
+                placeholder="Write a reply..."
+                className="w-full min-h-[100px] p-3 text-sm border rounded-lg focus:ring-2 focus:ring-blue-100 outline-none resize-none pr-12"
+              />
+              <Button
+                size="icon"
+                className="absolute bottom-3 right-3 h-8 w-8 bg-blue-600"
+              >
+                <Send size={14} />
+              </Button>
+            </div>
+          </div>
+        </SheetContent>
+      </Sheet>
     </DndContext>
   );
 };

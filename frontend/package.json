@@ -25,6 +25,7 @@
     "lodash": "^4.17.21",
     "lucide-react": "^0.544.0",
     "prop-types": "^15.8.1",
+    "radix-ui": "^1.4.3",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
     "react-redux": "^9.2.0",
