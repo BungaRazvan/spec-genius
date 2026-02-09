@@ -26,3 +26,6 @@ yarn-error.log*
 /.parcel-cache
 
 *.swp
+*.swn
+*.swo
+*.swm

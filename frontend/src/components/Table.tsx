@@ -3,6 +3,7 @@ import {
   useReactTable,
   getCoreRowModel,
   flexRender,
+  getExpandedRowModel,
 } from "@tanstack/react-table";
 import {
   DndContext,
@@ -25,17 +26,20 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetDescription,
-} from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
-import { MessageSquare, Settings2, Trash2, Send } from "lucide-react";
-
+import {
+  MessageSquare,
+  Settings2,
+  Trash2,
+  Database,
+  MessageCircle,
+  Info,
+  ChevronDown,
+  ChevronRight,
+} from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Badge } from "@/components/ui/badge";
 // --- 1. Sortable Header Component (X-Axis) ---
 
 export const InsertColumnZone = (props) => {
@@ -186,51 +190,139 @@ export const SortableRow = (props) => {
   };
 
   return (
-    <tr
-      ref={setNodeRef}
-      style={style}
-      className="bg-white border-b hover:bg-slate-50"
-    >
-      {/* Row Controls Cell */}
-      <td className="p-3 whitespace-nowrap text-slate-400 select-none w-10 text-center border-r bg-slate-50/50">
-        <div className="flex items-center justify-center gap-2">
-          <Button
-            variant="ghost"
-            size="sm"
-            className="h-8 w-8 p-0 text-slate-400 hover:text-blue-600"
-            onClick={() => onOpenComments(row.original)}
-          >
-            <MessageSquare size={14} />
-          </Button>
-
-          <button
-            // onClick={() => onDeleteRow(row.id)}
-            className="text-slate-300 hover:text-red-500"
-          >
-            <Trash2 size={14} />
-          </button>
-          <span
-            {...attributes}
-            {...listeners}
-            className="cursor-grab hover:text-slate-600"
-          >
-            ⠿
-          </span>
-        </div>
-      </td>
-
-      {row.getVisibleCells().map((cell) => (
-        <td
-          key={cell.id}
-          // ADDED: text-center to align with the centered header text
-          className="p-3 text-sm text-center"
-          style={{ width: cell.column.getSize() }}
-        >
-          {/* If the defaultColumn input is used, ensure that is also centered */}
-          {flexRender(cell.column.columnDef.cell, cell.getContext())}
+    <>
+      <tr
+        className={`group hover:bg-slate-50 transition-colors ${row.getIsExpanded() ? "bg-blue-50/30" : ""}`}
+      >
+        <td className="p-2 text-center border-t border-slate-100 w-10">
+          <div className="flex items-center justify-center gap-2">
+            <button
+              // onClick={() => onDeleteRow(row.id)}
+              className="text-slate-300 hover:text-red-500"
+            >
+              <Trash2 size={14} />
+            </button>
+            <span
+              {...attributes}
+              {...listeners}
+              className="cursor-grab hover:text-slate-600"
+            >
+              ⠿
+            </span>
+            <button
+              onClick={row.getToggleExpandedHandler()}
+              className="p-1 hover:bg-slate-200 rounded transition-colors"
+            >
+              {row.getIsExpanded() ? (
+                <ChevronDown size={14} />
+              ) : (
+                <ChevronRight size={14} />
+              )}
+            </button>
+          </div>
         </td>
-      ))}
-    </tr>
+
+        {row.getVisibleCells().map((cell) => (
+          <td key={cell.id} className="p-3 text-sm border-t border-slate-100">
+            {flexRender(cell.column.columnDef.cell, cell.getContext())}
+          </td>
+        ))}
+      </tr>
+
+      {/* THE NEW SECTION (Expanded Details) */}
+      {row.getIsExpanded() && (
+        <tr className="bg-slate-50/50">
+          <td
+            colSpan={row.getVisibleCells().length + 1}
+            className="p-0 border-t border-slate-200"
+          >
+            <div className="mx-8 my-4 bg-white border rounded-xl shadow-sm overflow-hidden animate-in fade-in slide-in-from-top-1 duration-200">
+              <Tabs defaultValue="notes" className="w-full">
+                <div className="flex items-center justify-between px-4 py-1 border-b bg-slate-50/50">
+                  <TabsList className="bg-transparent gap-4">
+                    <TabsTrigger
+                      value="notes"
+                      className="data-[state=active]:shadow-none data-[state=active]:bg-transparent data-[state=active]:border-b-2 rounded-none px-0 text-xs font-semibold"
+                    >
+                      <MessageCircle size={14} className="mr-2" /> Discussion
+                    </TabsTrigger>
+                    <TabsTrigger
+                      value="specs"
+                      className="data-[state=active]:shadow-none data-[state=active]:bg-transparent data-[state=active]:border-b-2 rounded-none px-0 text-xs font-semibold"
+                    >
+                      <Database size={14} className="mr-2" /> Developer Specs
+                    </TabsTrigger>
+                  </TabsList>
+                  <Badge
+                    variant="secondary"
+                    className="text-[10px] font-mono opacity-60"
+                  >
+                    Row Object ID: {row.original.id}
+                  </Badge>
+                </div>
+
+                {/* USE CASE 1: Client/User Notes */}
+                <TabsContent value="notes" className="p-4 m-0 space-y-4">
+                  <div className="flex gap-3">
+                    <div className="h-8 w-8 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center text-xs font-bold">
+                      C
+                    </div>
+                    <div className="flex-1 space-y-1">
+                      <div className="text-[11px] font-bold text-slate-500 uppercase">
+                        Client Inquiry
+                      </div>
+                      <div className="p-3 rounded-lg bg-slate-50 border text-sm text-slate-700 italic">
+                        "Can we change the status labels to match our internal
+                        CRM?"
+                      </div>
+                    </div>
+                  </div>
+                  <div className="pl-11">
+                    <textarea
+                      className="w-full p-3 text-sm border rounded-lg focus:ring-2 focus:ring-blue-50 outline-none min-h-[80px]"
+                      placeholder="Write a response or internal note..."
+                    />
+                  </div>
+                </TabsContent>
+
+                {/* USE CASE 2: Technical/Developer Info */}
+                <TabsContent value="specs" className="p-0 m-0">
+                  <div className="grid grid-cols-3 divide-x text-[11px] font-mono">
+                    <div className="p-4 bg-slate-900 text-slate-400">
+                      <div className="text-white mb-2 underline">
+                        DB Mapping
+                      </div>
+                      <div>
+                        Table:{" "}
+                        <span className="text-green-400">users_registry</span>
+                      </div>
+                      <div>
+                        Engine: <span className="text-green-400">InnoDB</span>
+                      </div>
+                    </div>
+                    <div className="p-4 bg-slate-900 text-slate-400">
+                      <div className="text-white mb-2 underline">
+                        Validation
+                      </div>
+                      <div>
+                        col_email:{" "}
+                        <span className="text-yellow-400">
+                          regex(/@company\.com$/)
+                        </span>
+                      </div>
+                    </div>
+                    <div className="p-4 bg-slate-900 text-slate-400">
+                      <div className="text-white mb-2 underline">Last Sync</div>
+                      <div className="text-blue-400">2026-02-09 18:15 UTC</div>
+                    </div>
+                  </div>
+                </TabsContent>
+              </Tabs>
+            </div>
+          </td>
+        </tr>
+      )}
+    </>
   );
 };
 
@@ -242,18 +334,18 @@ export const DraggableTable = (props) => {
   const [columnOrder, setColumnOrder] = useState(columns.map((c) => c.id));
   // Sheet State
   const [isSheetOpen, setIsSheetOpen] = useState(false);
-  const [activeRowForComments, setActiveRowForComments] = useState(null);
-
-  const handleOpenComments = (rowOriginal) => {
-    setActiveRowForComments(rowOriginal);
-    setIsSheetOpen(true);
-  };
-
+  const [activeRow, setActiveRow] = useState(null);
+  const [expanded, setExpanded] = useState({});
   // Sync internal state with props if they change externally
   useEffect(() => {
     setData(rows);
     setColumnOrder(columns.map((c) => c.id));
   }, [columns]);
+
+  const onOpenComments = (row) => {
+    setActiveRow(row);
+    setIsSheetOpen(true);
+  };
 
   const defaultColumn = {
     cell: (cellProps) => {
@@ -273,54 +365,52 @@ export const DraggableTable = (props) => {
       }, [initialValue]);
 
       return (
-        <div className="group/cell relative flex items-center h-10 px-2">
+        <div className="group relative flex items-center justify-between h-full px-2 py-1">
+          <div></div>
           <input
-            className="w-full bg-transparent outline-none text-center focus:ring-1 focus:ring-blue-200 rounded"
-            value={value}
+            className="w-full bg-transparent outline-none focus:bg-blue-50 rounded px-1 text-center"
+            value={value as string}
             onChange={(e) => setValue(e.target.value)}
-            onBlur={() =>
-              table.options.meta?.updateData(row.index, column.id, value)
-            }
+            onBlur={onBlur}
           />
 
-          <div className="absolute right-1 opacity-0 group-hover/cell:opacity-100 transition-opacity">
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button
-                  variant="ghost"
-                  className="h-6 w-6 p-0 hover:bg-slate-200"
-                >
-                  <Settings2 size={12} />
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-64 p-4" align="end">
-                <div className="space-y-4">
-                  <div className="space-y-1">
-                    <h4 className="font-semibold text-sm leading-none">
-                      Cell Properties
-                    </h4>
-                    <p className="text-xs text-muted-foreground">
-                      Apply custom data constraints.
-                    </p>
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button variant="ghost" className="h-6 w-6 p-0">
+                <Settings2 size={12} />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent
+              side="right"
+              align="start"
+              sideOffset={10}
+              className="w-60 shadow-xl border-slate-200 p-4 bg-white"
+            >
+              <div className="space-y-3">
+                <div>
+                  <h4 className="font-semibold text-sm">Cell Properties</h4>
+                  <p className="text-[11px] text-muted-foreground">
+                    Apply custom data constraints.
+                  </p>
+                </div>
+                <hr />
+                <div className="space-y-2">
+                  <div className="flex items-center space-x-2">
+                    <Checkbox id="pii" />
+                    <label htmlFor="pii" className="text-xs font-medium">
+                      Contains PII
+                    </label>
                   </div>
-                  <div className="grid gap-3">
-                    <div className="flex items-center space-x-2">
-                      <Checkbox id="pii" />
-                      <label htmlFor="pii" className="text-sm font-medium">
-                        Contains PII
-                      </label>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <Checkbox id="encrypt" />
-                      <label htmlFor="encrypt" className="text-sm font-medium">
-                        End-to-end Encryption
-                      </label>
-                    </div>
+                  <div className="flex items-center space-x-2">
+                    <Checkbox id="e2e" />
+                    <label htmlFor="e2e" className="text-xs font-medium">
+                      End-to-end Encryption
+                    </label>
                   </div>
                 </div>
-              </PopoverContent>
-            </Popover>
-          </div>
+              </div>
+            </PopoverContent>
+          </Popover>
         </div>
       );
     },
@@ -338,10 +428,13 @@ export const DraggableTable = (props) => {
         })),
       [columns],
     ),
-    state: { columnOrder },
+    state: { columnOrder, expanded },
     columnResizeMode: "onChange",
+    onExpandedChange: setExpanded,
+    getRowCanExpand: () => true,
     onColumnOrderChange: setColumnOrder,
     getCoreRowModel: getCoreRowModel(),
+    getExpandedRowModel: getExpandedRowModel(),
     getRowId: (row) => row.id, // Crucial for matching dnd-kit IDs
     defaultColumn,
   });
@@ -440,11 +533,7 @@ export const DraggableTable = (props) => {
                       colSpan={columnOrder.length + 1}
                     />
                   )}
-                  <SortableRow
-                    key={row.id}
-                    row={row}
-                    onOpenComments={handleOpenComments}
-                  />
+                  <SortableRow key={row.id} row={row} />
 
                   {/* Line BELOW every row */}
                   <InsertRowZone
@@ -457,56 +546,6 @@ export const DraggableTable = (props) => {
           </tbody>
         </table>
       </div>
-
-      <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
-        <SheetContent className="w-[400px] sm:w-[450px] flex flex-col p-0">
-          <SheetHeader className="p-6 border-b bg-slate-50/50">
-            <SheetTitle className="flex items-center gap-2">
-              <MessageSquare className="w-5 h-5 text-blue-500" />
-              Row Activity
-            </SheetTitle>
-            <SheetDescription>
-              Viewing comments and audit logs for row:{" "}
-              <span className="font-mono text-blue-600"></span>
-            </SheetDescription>
-          </SheetHeader>
-
-          <div className="flex-1 overflow-y-auto p-6 space-y-6">
-            {/* Mock Comment Thread */}
-            <div className="space-y-4">
-              <div className="flex gap-3">
-                <div className="w-8 h-8 rounded-full bg-slate-200 flex-shrink-0 flex items-center justify-center text-xs font-bold">
-                  JD
-                </div>
-                <div className="flex-1 space-y-1">
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm font-bold">Jane Doe</span>
-                    <span className="text-[10px] text-slate-400">12:45 PM</span>
-                  </div>
-                  <div className="p-3 rounded-2xl rounded-tl-none bg-slate-100 text-sm text-slate-700">
-                    Should we mark the 'Email' column as PII for this row?
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div className="p-6 border-t bg-white">
-            <div className="relative">
-              <textarea
-                placeholder="Write a reply..."
-                className="w-full min-h-[100px] p-3 text-sm border rounded-lg focus:ring-2 focus:ring-blue-100 outline-none resize-none pr-12"
-              />
-              <Button
-                size="icon"
-                className="absolute bottom-3 right-3 h-8 w-8 bg-blue-600"
-              >
-                <Send size={14} />
-              </Button>
-            </div>
-          </div>
-        </SheetContent>
-      </Sheet>
     </DndContext>
   );
 };
