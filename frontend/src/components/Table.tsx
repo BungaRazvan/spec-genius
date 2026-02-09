@@ -20,7 +20,6 @@ import {
   useSortable,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-
 import {
   Popover,
   PopoverContent,
@@ -29,18 +28,15 @@ import {
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
-  MessageSquare,
   Settings2,
   Trash2,
   Database,
   MessageCircle,
-  Info,
   ChevronDown,
   ChevronRight,
 } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-// --- 1. Sortable Header Component (X-Axis) ---
 
 export const InsertColumnZone = (props) => {
   const { onAdd, label = "+" } = props;
@@ -63,6 +59,7 @@ export const InsertColumnZone = (props) => {
   );
 };
 
+// --- 1. Sortable Header Component (X-Axis) ---
 export const SortableHeader = (props) => {
   const { header, onAddColumn, index, onRenameColumn, onDeleteColumn } = props;
   const [isEditing, setIsEditing] = useState(false);
@@ -87,7 +84,7 @@ export const SortableHeader = (props) => {
 
   const handleBlur = () => {
     setIsEditing(false);
-    onRenameColumn(header.id, title);
+    onRenameColumn(header.id, index, title);
   };
 
   return (
@@ -127,7 +124,7 @@ export const SortableHeader = (props) => {
         </div>
 
         <button
-          onClick={() => onDeleteColumn(header.id)}
+          onClick={() => onDeleteColumn(header.id, index)}
           className="opacity-0 group-hover/header:opacity-100 text-slate-400 hover:text-red-500 transition-opacity min-w-[20px]"
         >
           ✕
@@ -168,7 +165,7 @@ export const InsertRowZone = (props) => {
 
 // --- 2. Sortable Row Component (The Y-Axis) ---
 export const SortableRow = (props) => {
-  const { row, onOpenComments } = props;
+  const { row, index, onDeleteRow } = props;
 
   const {
     attributes,
@@ -192,6 +189,9 @@ export const SortableRow = (props) => {
   return (
     <>
       <tr
+        ref={setNodeRef}
+        // @ts-ignore
+        style={style}
         className={`group hover:bg-slate-50 transition-colors ${row.getIsExpanded() ? "bg-blue-50/30" : ""}`}
       >
         <td className="p-2 text-center border-t border-slate-100 w-10">
@@ -200,7 +200,7 @@ export const SortableRow = (props) => {
               // onClick={() => onDeleteRow(row.id)}
               className="text-slate-300 hover:text-red-500"
             >
-              <Trash2 size={14} />
+              <Trash2 onClick={() => onDeleteRow(row, index)} size={14} />
             </button>
             <span
               {...attributes}
@@ -328,24 +328,29 @@ export const SortableRow = (props) => {
 
 // --- 3. Main Draggable Table ---
 export const DraggableTable = (props) => {
-  const { rows, columns } = props;
+  const {
+    rows,
+    columns,
+    onAddRow,
+    onDeleteRow,
+    onDeleteColumn,
+    onAddColumn,
+    onRenameColumn,
+    onRenameCell,
+  } = props;
 
   const [data, setData] = useState(rows);
   const [columnOrder, setColumnOrder] = useState(columns.map((c) => c.id));
-  // Sheet State
-  const [isSheetOpen, setIsSheetOpen] = useState(false);
-  const [activeRow, setActiveRow] = useState(null);
+
   const [expanded, setExpanded] = useState({});
   // Sync internal state with props if they change externally
   useEffect(() => {
-    setData(rows);
     setColumnOrder(columns.map((c) => c.id));
   }, [columns]);
 
-  const onOpenComments = (row) => {
-    setActiveRow(row);
-    setIsSheetOpen(true);
-  };
+  useEffect(() => {
+    setData(rows);
+  }, [rows]);
 
   const defaultColumn = {
     cell: (cellProps) => {
@@ -356,7 +361,7 @@ export const DraggableTable = (props) => {
 
       // When the input is blurred, we'll call our table meta's updateData function
       const onBlur = () => {
-        table.options.meta?.updateData(row.index, column.id, value);
+        table.options.meta?.updateData(row, row.index, column.id, value);
       };
 
       // If the initialValue is changed external, sync it up with our state
@@ -429,6 +434,9 @@ export const DraggableTable = (props) => {
       [columns],
     ),
     state: { columnOrder, expanded },
+    meta: {
+      updateData: onRenameCell,
+    },
     columnResizeMode: "onChange",
     onExpandedChange: setExpanded,
     getRowCanExpand: () => true,
@@ -466,26 +474,6 @@ export const DraggableTable = (props) => {
     [table.getRowModel().rows],
   );
 
-  // Handlers to modify the local state
-  const onAddRow = (index: number) => {
-    const newRow = { id: crypto.randomUUID(), name: "New Row" };
-    setData((old) => {
-      const updated = [...old];
-      updated.splice(index, 0, newRow);
-      return updated;
-    });
-  };
-
-  const onAddColumn = (index: number) => {
-    const newColId = `col-${crypto.randomUUID().slice(0, 4)}`;
-    // Note: In a real app, you'd update the 'columns' prop in the parent
-    setColumnOrder((old) => {
-      const updated = [...old];
-      updated.splice(index, 0, newColId);
-      return updated;
-    });
-  };
-
   return (
     <DndContext
       sensors={sensors}
@@ -512,6 +500,8 @@ export const DraggableTable = (props) => {
                       header={header}
                       index={index}
                       onAddColumn={onAddColumn}
+                      onDeleteColumn={onDeleteColumn}
+                      onRenameColumn={onRenameColumn}
                     />
                   ))}
                 </SortableContext>
@@ -533,7 +523,12 @@ export const DraggableTable = (props) => {
                       colSpan={columnOrder.length + 1}
                     />
                   )}
-                  <SortableRow key={row.id} row={row} />
+                  <SortableRow
+                    key={row.id}
+                    row={row}
+                    index={index}
+                    onDeleteRow={onDeleteRow}
+                  />
 
                   {/* Line BELOW every row */}
                   <InsertRowZone

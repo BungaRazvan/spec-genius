@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { DraggableTable } from "components/Table";
 
 const SpecificationDocument = () => {
@@ -67,11 +67,79 @@ const SpecificationDocument = () => {
     ],
   };
 
+  const [rows, setRows] = useState(mockServerData.rows);
+  const [columns, setColumns] = useState(mockServerData.columns);
+
+  // Handlers to modify the local state
+  const onAddRow = (index: number) => {
+    const newRow = { id: crypto.randomUUID() };
+    setRows((old) => {
+      const updated = [...old];
+      updated.splice(index, 0, newRow);
+      return updated;
+    });
+  };
+
+  const onDeleteRow = (_, index: number) => {
+    setRows((old) => {
+      const updated = [...old];
+      updated.splice(index, 1);
+      return updated;
+    });
+  };
+
+  const onAddColumn = (index: number) => {
+    const newRow = { id: crypto.randomUUID(), header: "New Header" };
+    setColumns((old) => {
+      const updated = [...old];
+      updated.splice(index, 0, newRow);
+      return updated;
+    });
+  };
+
+  const onDeleteColumn = (_, index: number) => {
+    setColumns((old) => {
+      const updated = [...old];
+      updated.splice(index, 1);
+      return updated;
+    });
+  };
+
+  const onRenameColumn = (id, index, title) => {
+    setColumns((old) => {
+      const updated = [...old];
+      const updatedCol = { ...updated[index] };
+      updatedCol.header = title;
+
+      updated.splice(index, 1, updatedCol);
+
+      return updated;
+    });
+  };
+
+  const onRenameCell = (_, index, colKey, value) => {
+    setRows((old) => {
+      const updated = [...old];
+      const updatedRow = { ...updated[index] };
+      updatedRow[colKey] = value;
+
+      updated.splice(index, 1, updatedRow);
+
+      return updated;
+    });
+  };
+
   return (
     <div style={{ padding: "40px", fontFamily: "sans-serif" }}>
       <DraggableTable
-        rows={mockServerData.rows}
-        columns={mockServerData.columns}
+        rows={rows}
+        columns={columns}
+        onAddRow={onAddRow}
+        onDeleteRow={onDeleteRow}
+        onRenameCell={onRenameCell}
+        onAddColumn={onAddColumn}
+        onDeleteColumn={onDeleteColumn}
+        onRenameColumn={onRenameColumn}
       />
     </div>
   );
