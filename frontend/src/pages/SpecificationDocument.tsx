@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { DraggableTable } from "components/Table";
+import { DraggableTable, DynamicWidget } from "components/Table";
 
 const SpecificationDocument = () => {
   const mockServerData = {
@@ -131,6 +131,17 @@ const SpecificationDocument = () => {
 
   return (
     <div style={{ padding: "40px", fontFamily: "sans-serif" }}>
+      <div>
+        <DynamicWidget
+          rows={[{ col_name: "a" }]}
+          columns={[
+            {
+              id: "col_name",
+              header: "User Name",
+            },
+          ]}
+        />
+      </div>
       <DraggableTable
         rows={rows}
         columns={columns}
