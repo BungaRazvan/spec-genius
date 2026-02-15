@@ -111,7 +111,7 @@ export const SortableHeader = (props) => {
 
 // --- 2. Sortable Row Component (The Y-Axis) ---
 export const SortableRow = (props) => {
-  const { row, index, onDeleteRow, view } = props;
+  const { row, index, onDeleteRow, view, cell } = props;
 
   const {
     attributes,
@@ -166,19 +166,24 @@ export const SortableRow = (props) => {
             )}
           </div>
         </td>
-
-        {row.getVisibleCells().map((cell) => (
-          <React.Fragment key={cell.id}>
-            {view == "horizontal" && (
-              <td className="px-4 py-3 bg-slate-50/50 w-1/3 font-semibold text-slate-500 border-r uppercase text-[10px] tracking-wider">
-                {cell.column.columnDef.header}:
-              </td>
-            )}
+        {view === "horizontal" ? (
+          // HORIZONTAL VIEW: Render Label + Value for the ONE specific cell
+          <>
+            <td className="px-4 py-3 bg-slate-50/50 w-1/3 font-semibold text-slate-500 border-r uppercase text-[10px] tracking-wider whitespace-nowrap">
+              {cell.column.columnDef.header}:
+            </td>
             <td className="p-3 text-sm border-t border-slate-100">
               {flexRender(cell.column.columnDef.cell, cell.getContext())}
             </td>
-          </React.Fragment>
-        ))}
+          </>
+        ) : (
+          // STANDARD VIEW: Map all cells across
+          row.getVisibleCells().map((cell) => (
+            <td key={cell.id} className="p-3 text-sm border-t border-slate-100">
+              {flexRender(cell.column.columnDef.cell, cell.getContext())}
+            </td>
+          ))
+        )}
       </tr>
       {/* THE NEW SECTION (Expanded Details) */}
       {row.getIsExpanded() && (
@@ -350,34 +355,9 @@ export const DraggableTable = (props) => {
 export const DynamicWidget = (props) => {
   const { columns, rows } = props;
   const [columnOrder, setColumnOrder] = useState(columns.map((c) => c.id));
-  const [data, setData] = useState(rows);
-
-  useEffect(() => {
-    setColumnOrder(columns.map((c) => c.id));
-  }, [columns]);
-  const sensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
-  );
-
-  const handleDragEnd = (event) => {
-    const { active, over } = event;
-    if (!active || !over || active.id === over.id) return;
-
-    if (columnOrder.includes(active.id)) {
-      setColumnOrder((old) =>
-        arrayMove(old, old.indexOf(active.id), old.indexOf(over.id)),
-      );
-    } else {
-      setData((old) => {
-        const oldIndex = old.findIndex((r) => r.id === active.id);
-        const newIndex = old.findIndex((r) => r.id === over.id);
-        return arrayMove(old, oldIndex, newIndex);
-      });
-    }
-  };
 
   const table = useReactTable({
-    data,
+    data: rows,
     columns: useMemo(
       () =>
         columns.map((col) => ({
@@ -387,47 +367,34 @@ export const DynamicWidget = (props) => {
         })),
       [columns],
     ),
-    state: { columnOrder },
     getCoreRowModel: getCoreRowModel(),
-    onColumnOrderChange: setColumnOrder,
-    columnResizeMode: "onChange",
   });
 
+  // For the widget, we usually only care about the first data object
+  const row = table.getRowModel().rows[0];
   const columnIds = useMemo(() => columns.map((c) => c.id), [columns]);
 
+  if (!row) return null;
+
   return (
-    <DndContext
-      sensors={sensors}
-      collisionDetection={closestCenter}
-      onDragEnd={handleDragEnd}
-    >
-      <div className="rounded-xl border border-slate-200 shadow-sm bg-white overflow-hidden max-w-md">
-        <table className="w-full text-sm">
+    <DndContext sensors={useSensors(useSensor(PointerSensor))}>
+      <div className="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden max-w-md">
+        <table className="w-full text-sm border-collapse">
           <tbody className="divide-y divide-slate-100">
             <SortableContext
               items={columnIds}
-              strategy={horizontalListSortingStrategy}
+              strategy={verticalListSortingStrategy}
             >
-              {table.getRowModel().rows.map((row, index) => (
-                <React.Fragment key={row.id}>
-                  {row.getVisibleCells().map((cell) => (
-                    <React.Fragment key={cell.id}>
-                      <SortableRow
-                        key={row.id}
-                        row={row}
-                        index={index}
-                        view="horizontal"
-                        onDeleteRow={() => {}}
-                      />
-
-                      <InsertRowZone
-                        // onAdd={() => onAddRow(0)}
-                        colSpan={columnOrder.length + 2}
-                        className={clsx("pb-3", index == rows.length)}
-                      />
-                    </React.Fragment>
-                  ))}
-                </React.Fragment>
+              {/* THE FIX: Map over CELLS so each property is a new TR */}
+              {row.getVisibleCells().map((cell, index) => (
+                <SortableRow
+                  key={cell.column.id}
+                  row={row}
+                  index={index}
+                  view="horizontal"
+                  cell={cell}
+                  onDeleteRow={() => {}}
+                />
               ))}
             </SortableContext>
           </tbody>
