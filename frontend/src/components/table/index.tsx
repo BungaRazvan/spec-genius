@@ -20,26 +20,13 @@ import {
   useSortable,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
-import {
-  Settings2,
-  Trash2,
-  Database,
-  MessageCircle,
-  ChevronDown,
-  ChevronRight,
-} from "lucide-react";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Badge } from "@/components/ui/badge";
+
+import { Trash2, ChevronDown, ChevronRight } from "lucide-react";
 import { InsertColumnZone } from "./InsertColumnZone";
 import { RowDetailView } from "./RowDetail";
 import { InsertRowZone } from "./InsertRowZone";
+import clsx from "clsx";
+import EditableCell from "./EditableCell";
 
 // --- 1. Sortable Header Component (X-Axis) ---
 export const SortableHeader = (props) => {
@@ -124,7 +111,7 @@ export const SortableHeader = (props) => {
 
 // --- 2. Sortable Row Component (The Y-Axis) ---
 export const SortableRow = (props) => {
-  const { row, index, onDeleteRow } = props;
+  const { row, index, onDeleteRow, view } = props;
 
   const {
     attributes,
@@ -155,10 +142,7 @@ export const SortableRow = (props) => {
       >
         <td className="p-2 text-center border-t border-slate-100 w-10">
           <div className="flex items-center justify-center gap-2">
-            <button
-              // onClick={() => onDeleteRow(row.id)}
-              className="text-slate-300 hover:text-red-500"
-            >
+            <button className="text-slate-300 hover:text-red-500">
               <Trash2 onClick={() => onDeleteRow(row, index)} size={14} />
             </button>
             <span
@@ -168,28 +152,45 @@ export const SortableRow = (props) => {
             >
               ⠿
             </span>
-            <button
-              onClick={row.getToggleExpandedHandler()}
-              className="p-1 hover:bg-slate-200 rounded transition-colors"
-            >
-              {row.getIsExpanded() ? (
-                <ChevronDown size={14} />
-              ) : (
-                <ChevronRight size={14} />
-              )}
-            </button>
+            {row.getCanExpand() && (
+              <button
+                onClick={row.getToggleExpandedHandler()}
+                className="p-1 hover:bg-slate-200 rounded transition-colors"
+              >
+                {row.getIsExpanded() ? (
+                  <ChevronDown size={14} />
+                ) : (
+                  <ChevronRight size={14} />
+                )}
+              </button>
+            )}
           </div>
         </td>
 
         {row.getVisibleCells().map((cell) => (
-          <td key={cell.id} className="p-3 text-sm border-t border-slate-100">
-            {flexRender(cell.column.columnDef.cell, cell.getContext())}
-          </td>
+          <React.Fragment key={cell.id}>
+            {view == "horizontal" && (
+              <td className="px-4 py-3 bg-slate-50/50 w-1/3 font-semibold text-slate-500 border-r uppercase text-[10px] tracking-wider">
+                {cell.column.columnDef.header}:
+              </td>
+            )}
+            <td className="p-3 text-sm border-t border-slate-100">
+              {flexRender(cell.column.columnDef.cell, cell.getContext())}
+            </td>
+          </React.Fragment>
         ))}
       </tr>
-
       {/* THE NEW SECTION (Expanded Details) */}
-      {row.getIsExpanded() && <RowDetailView row={row} />}
+      {row.getIsExpanded() && (
+        <tr className="bg-slate-50/50">
+          <td
+            colSpan={row.getVisibleCells().length + 1}
+            className="p-0 border-t border-slate-200"
+          >
+            <RowDetailView row={row} />
+          </td>
+        </tr>
+      )}
     </>
   );
 };
@@ -220,108 +221,9 @@ export const DraggableTable = (props) => {
     setData(rows);
   }, [rows]);
 
-  const defaultColumn = {
-    cell: (cellProps) => {
-      const { getValue, row, column, table } = cellProps;
-      const initialValue = getValue();
-      // We need to keep and update the state of the cell normally
-      const [value, setValue] = useState(initialValue);
-
-      // When the input is blurred, we'll call our table meta's updateData function
-      const onBlur = () => {
-        table.options.meta?.updateData(row, row.index, column.id, value);
-      };
-
-      // If the initialValue is changed external, sync it up with our state
-      useEffect(() => {
-        setValue(initialValue);
-      }, [initialValue]);
-
-      return (
-        <div className="group relative flex items-center justify-between h-full px-2 py-1">
-          <div></div>
-          <input
-            className="w-full bg-transparent outline-none focus:bg-blue-50 rounded px-1 text-center"
-            value={value as string}
-            onChange={(e) => setValue(e.target.value)}
-            onBlur={onBlur}
-          />
-
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button variant="ghost" className="h-6 w-6 p-0">
-                <Settings2 size={12} />
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent
-              side="right"
-              align="start"
-              sideOffset={10}
-              className="w-60 shadow-xl border-slate-200 p-4 bg-white"
-            >
-              <div className="space-y-3">
-                <div>
-                  <h4 className="font-semibold text-sm">Cell Properties</h4>
-                  <p className="text-[11px] text-muted-foreground">
-                    Apply custom data constraints.
-                  </p>
-                </div>
-                <hr />
-                <div className="space-y-2">
-                  <div className="flex items-center space-x-2">
-                    <Checkbox id="pii" />
-                    <label htmlFor="pii" className="text-xs font-medium">
-                      Contains PII
-                    </label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <Checkbox id="e2e" />
-                    <label htmlFor="e2e" className="text-xs font-medium">
-                      End-to-end Encryption
-                    </label>
-                  </div>
-                </div>
-              </div>
-            </PopoverContent>
-            <PopoverContent
-              side="right"
-              align="start"
-              sideOffset={10}
-              className="w-60 shadow-xl border-slate-200 p-4 bg-white"
-            >
-              <div className="space-y-3">
-                <div>
-                  <h4 className="font-semibold text-sm">Cell Properties</h4>
-                  <p className="text-[11px] text-muted-foreground">
-                    Apply custom data constraints.
-                  </p>
-                </div>
-                <hr />
-                <div className="space-y-2">
-                  <div className="flex items-center space-x-2">
-                    <Checkbox id="pii" />
-                    <label htmlFor="pii" className="text-xs font-medium">
-                      Contains PII
-                    </label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <Checkbox id="e2e" />
-                    <label htmlFor="e2e" className="text-xs font-medium">
-                      End-to-end Encryption
-                    </label>
-                  </div>
-                </div>
-              </div>
-            </PopoverContent>
-          </Popover>
-        </div>
-      );
-    },
-  };
-
   const table = useReactTable({
     data,
-    defaultColumn,
+
     columns: useMemo(
       () =>
         columns.map((col) => ({
@@ -329,6 +231,7 @@ export const DraggableTable = (props) => {
           header: col.header,
           size: col.width || 150,
           meta: col.metadata,
+          cell: (cellProps) => <EditableCell {...cellProps} />,
         })),
       [columns],
     ),
@@ -432,6 +335,7 @@ export const DraggableTable = (props) => {
                   <InsertRowZone
                     onAdd={() => onAddRow(index + 1)}
                     colSpan={columnOrder.length + 1}
+                    className={clsx("pb-3", index == rows.length)}
                   />
                 </React.Fragment>
               ))}
@@ -444,7 +348,7 @@ export const DraggableTable = (props) => {
 };
 
 export const DynamicWidget = (props) => {
-  const { config, onCellChange, columns, rows } = props;
+  const { columns, rows } = props;
   const [columnOrder, setColumnOrder] = useState(columns.map((c) => c.id));
   const [data, setData] = useState(rows);
 
@@ -472,47 +376,14 @@ export const DynamicWidget = (props) => {
     }
   };
 
-  const defaultColumn = {
-    cell: (cellProps) => {
-      const { getValue, row, column, table } = cellProps;
-      const initialValue = getValue();
-      // We need to keep and update the state of the cell normally
-      const [value, setValue] = useState(initialValue);
-
-      // When the input is blurred, we'll call our table meta's updateData function
-      const onBlur = () => {
-        table.options.meta?.updateData(row, row.index, column.id, value);
-      };
-
-      // If the initialValue is changed external, sync it up with our state
-      useEffect(() => {
-        setValue(initialValue);
-      }, [initialValue]);
-
-      return (
-        <div className="group relative flex items-center justify-between h-full px-2 py-1">
-          <div></div>
-          <input
-            className="w-full bg-transparent outline-none focus:bg-blue-50 rounded px-1 text-center"
-            value={value as string}
-            onChange={(e) => setValue(e.target.value)}
-            onBlur={onBlur}
-          />
-        </div>
-      );
-    },
-  };
-
   const table = useReactTable({
     data,
-    defaultColumn,
     columns: useMemo(
       () =>
         columns.map((col) => ({
           accessorKey: col.id,
           header: col.header,
-          size: col.width || 150,
-          meta: col.metadata,
+          cell: (cellProps) => <EditableCell {...cellProps} />,
         })),
       [columns],
     ),
@@ -522,10 +393,7 @@ export const DynamicWidget = (props) => {
     columnResizeMode: "onChange",
   });
 
-  const rowIds = useMemo(
-    () => table.getRowModel().rows.map((r) => r.id),
-    [table.getRowModel().rows],
-  );
+  const columnIds = useMemo(() => columns.map((c) => c.id), [columns]);
 
   return (
     <DndContext
@@ -537,38 +405,25 @@ export const DynamicWidget = (props) => {
         <table className="w-full text-sm">
           <tbody className="divide-y divide-slate-100">
             <SortableContext
-              items={columnOrder}
+              items={columnIds}
               strategy={horizontalListSortingStrategy}
             >
               {table.getRowModel().rows.map((row, index) => (
                 <React.Fragment key={row.id}>
-                  {/* Line ABOVE the first row */}
-                  {index === 0 && (
-                    <InsertRowZone
-                      // onAdd={() => onAddRow(0)}
-                      colSpan={columnOrder.length + 1}
-                    />
-                  )}
                   {row.getVisibleCells().map((cell) => (
                     <React.Fragment key={cell.id}>
-                      <tr className="group">
-                        {/* Column 1: The Label (taken from the column header definition) */}
-                        <td className="px-4 py-3 bg-slate-50/50 w-1/3 font-semibold text-slate-500 border-r uppercase text-[10px] tracking-wider">
-                          {cell.column.columnDef.header}:
-                        </td>
-
-                        {/* Column 2: The actual editable data */}
-                        <td className="px-4 py-3 w-2/3">
-                          {flexRender(
-                            cell.column.columnDef.cell,
-                            cell.getContext(),
-                          )}
-                        </td>
-                      </tr>
+                      <SortableRow
+                        key={row.id}
+                        row={row}
+                        index={index}
+                        view="horizontal"
+                        onDeleteRow={() => {}}
+                      />
 
                       <InsertRowZone
                         // onAdd={() => onAddRow(0)}
-                        colSpan={columnOrder.length + 1}
+                        colSpan={columnOrder.length + 2}
+                        className={clsx("pb-3", index == rows.length)}
                       />
                     </React.Fragment>
                   ))}

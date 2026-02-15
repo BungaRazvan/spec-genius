@@ -159,8 +159,21 @@ const SpecificationDocument = () => {
               File Properties
             </h3>
             <DynamicWidget
-              rows={[{ col_name: "User_Onboarding_Export" }]}
-              columns={[{ id: "col_name", header: "Namespace" }]}
+              rows={[
+                {
+                  id: "meta-1",
+                  namespace: "User_Onboarding_Export",
+                  encoding: "UTF-8",
+                  delimiter: "Comma (,)",
+                  quoteChar: 'Double Quote (")',
+                },
+              ]}
+              columns={[
+                { id: "namespace", header: "Namespace" },
+                // { id: "encoding", header: "Encoding" },
+                // { id: "delimiter", header: "Delimiter" },
+                // { id: "quoteChar", header: "Quote Char" },
+              ]}
             />
           </div>
         </section>
