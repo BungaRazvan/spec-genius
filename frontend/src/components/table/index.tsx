@@ -37,27 +37,9 @@ import {
 } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-
-export const InsertColumnZone = (props) => {
-  const { onAdd, label = "+" } = props;
-
-  return (
-    // pointer-events-none makes the 6px area "invisible" to the mouse for resizing
-    <div className="absolute right-[-3px] top-0 h-full w-[6px] z-[50] group/insertv pointer-events-none">
-      <div className="absolute inset-y-0 left-1/2 w-[2px] bg-blue-500 opacity-0 group-hover/insertv:opacity-100 transition-opacity duration-200" />
-      <button
-        onClick={(e) => {
-          e.stopPropagation();
-          onAdd();
-        }}
-        // pointer-events-auto makes just the button clickable
-        className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 opacity-0 group-hover/insertv:opacity-100 bg-blue-500 text-white w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold shadow-lg hover:scale-110 transition-all z-[110] pointer-events-auto"
-      >
-        {label}
-      </button>
-    </div>
-  );
-};
+import { InsertColumnZone } from "./InsertColumnZone";
+import { RowDetailView } from "./RowDetail";
+import { InsertRowZone } from "./InsertRowZone";
 
 // --- 1. Sortable Header Component (X-Axis) ---
 export const SortableHeader = (props) => {
@@ -140,29 +122,6 @@ export const SortableHeader = (props) => {
   );
 };
 
-export const InsertRowZone = (props) => {
-  const { onAdd, colSpan, label = "New Row" } = props;
-
-  return (
-    <tr className="group/insert relative">
-      {/* Ensure colSpan is total columns + 1 */}
-      <td colSpan={colSpan} className="p-0 border-none h-1 relative">
-        <div className="absolute inset-x-0 top-[-4px] h-2 flex items-center justify-center opacity-0 group-hover/insert:opacity-100 transition-opacity z-20">
-          {/* This line will now span the entire width of the <td> which spans the whole <tr> */}
-          <div className="absolute inset-x-0 h-[2px] bg-blue-500" />
-
-          <button
-            onClick={onAdd}
-            className="relative bg-blue-500 text-white px-3 py-0.5 rounded-full text-[10px] font-bold uppercase shadow-md hover:scale-105 transition-transform"
-          >
-            {label}
-          </button>
-        </div>
-      </td>
-    </tr>
-  );
-};
-
 // --- 2. Sortable Row Component (The Y-Axis) ---
 export const SortableRow = (props) => {
   const { row, index, onDeleteRow } = props;
@@ -230,98 +189,7 @@ export const SortableRow = (props) => {
       </tr>
 
       {/* THE NEW SECTION (Expanded Details) */}
-      {row.getIsExpanded() && (
-        <tr className="bg-slate-50/50">
-          <td
-            colSpan={row.getVisibleCells().length + 1}
-            className="p-0 border-t border-slate-200"
-          >
-            <div className="mx-8 my-4 bg-white border rounded-xl shadow-sm overflow-hidden animate-in fade-in slide-in-from-top-1 duration-200">
-              <Tabs defaultValue="notes" className="w-full">
-                <div className="flex items-center justify-between px-4 py-1 border-b bg-slate-50/50">
-                  <TabsList className="bg-transparent gap-4">
-                    <TabsTrigger
-                      value="notes"
-                      className="data-[state=active]:shadow-none data-[state=active]:bg-transparent data-[state=active]:border-b-2 rounded-none px-0 text-xs font-semibold"
-                    >
-                      <MessageCircle size={14} className="mr-2" /> Discussion
-                    </TabsTrigger>
-                    <TabsTrigger
-                      value="specs"
-                      className="data-[state=active]:shadow-none data-[state=active]:bg-transparent data-[state=active]:border-b-2 rounded-none px-0 text-xs font-semibold"
-                    >
-                      <Database size={14} className="mr-2" /> Developer Specs
-                    </TabsTrigger>
-                  </TabsList>
-                  <Badge
-                    variant="secondary"
-                    className="text-[10px] font-mono opacity-60"
-                  >
-                    Row Object ID: {row.original.id}
-                  </Badge>
-                </div>
-
-                {/* USE CASE 1: Client/User Notes */}
-                <TabsContent value="notes" className="p-4 m-0 space-y-4">
-                  <div className="flex gap-3">
-                    <div className="h-8 w-8 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center text-xs font-bold">
-                      C
-                    </div>
-                    <div className="flex-1 space-y-1">
-                      <div className="text-[11px] font-bold text-slate-500 uppercase">
-                        Client Inquiry
-                      </div>
-                      <div className="p-3 rounded-lg bg-slate-50 border text-sm text-slate-700 italic">
-                        "Can we change the status labels to match our internal
-                        CRM?"
-                      </div>
-                    </div>
-                  </div>
-                  <div className="pl-11">
-                    <textarea
-                      className="w-full p-3 text-sm border rounded-lg focus:ring-2 focus:ring-blue-50 outline-none min-h-[80px]"
-                      placeholder="Write a response or internal note..."
-                    />
-                  </div>
-                </TabsContent>
-
-                {/* USE CASE 2: Technical/Developer Info */}
-                <TabsContent value="specs" className="p-0 m-0">
-                  <div className="grid grid-cols-3 divide-x text-[11px] font-mono">
-                    <div className="p-4 bg-slate-900 text-slate-400">
-                      <div className="text-white mb-2 underline">
-                        DB Mapping
-                      </div>
-                      <div>
-                        Table:{" "}
-                        <span className="text-green-400">users_registry</span>
-                      </div>
-                      <div>
-                        Engine: <span className="text-green-400">InnoDB</span>
-                      </div>
-                    </div>
-                    <div className="p-4 bg-slate-900 text-slate-400">
-                      <div className="text-white mb-2 underline">
-                        Validation
-                      </div>
-                      <div>
-                        col_email:{" "}
-                        <span className="text-yellow-400">
-                          regex(/@company\.com$/)
-                        </span>
-                      </div>
-                    </div>
-                    <div className="p-4 bg-slate-900 text-slate-400">
-                      <div className="text-white mb-2 underline">Last Sync</div>
-                      <div className="text-blue-400">2026-02-09 18:15 UTC</div>
-                    </div>
-                  </div>
-                </TabsContent>
-              </Tabs>
-            </div>
-          </td>
-        </tr>
-      )}
+      {row.getIsExpanded() && <RowDetailView row={row} />}
     </>
   );
 };

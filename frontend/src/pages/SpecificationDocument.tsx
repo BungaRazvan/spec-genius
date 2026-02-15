@@ -156,28 +156,27 @@ const SpecificationDocument = () => {
         <section className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div className="col-span-1">
             <h3 className="text-[10px] font-bold text-slate-500 uppercase tracking-[0.2em] mb-3">
-              Core Properties
+              File Properties
             </h3>
             <DynamicWidget
               rows={[{ col_name: "User_Onboarding_Export" }]}
               columns={[{ id: "col_name", header: "Namespace" }]}
             />
           </div>
-          {/* Add more small DynamicWidgets here for Encoding, Delimiter, etc. */}
         </section>
 
         <section className="space-y-4">
-          {/* <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between">
             <h3 className="text-[10px] font-bold text-slate-500 uppercase tracking-[0.2em]">
               Field Definitions
             </h3>
             <button
-              onClick={() => onAddColumn(columns.length)}
+              onClick={() => onAddRow(rows.length)}
               className="text-[10px] font-bold text-blue-400 hover:text-blue-300 uppercase tracking-widest"
             >
               + Add New Field
             </button>
-          </div> */}
+          </div>
 
           <div className="rounded-2xl border border-white/5 shadow-2xl overflow-hidden">
             <DraggableTable
