@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { DraggableTable, DynamicWidget } from "components/Table";
+import { DraggableTable, DynamicWidget } from "@/src/components/table";
 
 const SpecificationDocument = () => {
   const mockServerData = {
@@ -130,28 +130,69 @@ const SpecificationDocument = () => {
   };
 
   return (
-    <div style={{ padding: "40px", fontFamily: "sans-serif" }}>
-      <div>
-        <DynamicWidget
-          rows={[{ col_name: "a" }]}
-          columns={[
-            {
-              id: "col_name",
-              header: "User Name",
-            },
-          ]}
-        />
+    <div className="min-h-screen text-slate-300 p-8 font-sans">
+      <div className="max-w-7xl mx-auto space-y-8">
+        {/* HEADER SECTION */}
+        <header className="flex items-center justify-between border-b border-white/10 pb-6">
+          <div>
+            <h1 className="text-2xl font-bold text-white tracking-tight">
+              {mockServerData.documentName}
+            </h1>
+            <p className="text-sm text-slate-500 mt-1">
+              CSV Format Specification
+            </p>
+          </div>
+          <div className="flex gap-3">
+            <button className="px-4 py-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg text-xs font-medium transition-all">
+              Validate File
+            </button>
+            <button className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-xs font-bold transition-all shadow-lg shadow-blue-900/20">
+              Generate Sample
+            </button>
+          </div>
+        </header>
+
+        {/* METADATA GRID  */}
+        <section className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="col-span-1">
+            <h3 className="text-[10px] font-bold text-slate-500 uppercase tracking-[0.2em] mb-3">
+              Core Properties
+            </h3>
+            <DynamicWidget
+              rows={[{ col_name: "User_Onboarding_Export" }]}
+              columns={[{ id: "col_name", header: "Namespace" }]}
+            />
+          </div>
+          {/* Add more small DynamicWidgets here for Encoding, Delimiter, etc. */}
+        </section>
+
+        <section className="space-y-4">
+          {/* <div className="flex items-center justify-between">
+            <h3 className="text-[10px] font-bold text-slate-500 uppercase tracking-[0.2em]">
+              Field Definitions
+            </h3>
+            <button
+              onClick={() => onAddColumn(columns.length)}
+              className="text-[10px] font-bold text-blue-400 hover:text-blue-300 uppercase tracking-widest"
+            >
+              + Add New Field
+            </button>
+          </div> */}
+
+          <div className="rounded-2xl border border-white/5 shadow-2xl overflow-hidden">
+            <DraggableTable
+              rows={rows}
+              columns={columns}
+              onAddRow={onAddRow}
+              onDeleteRow={onDeleteRow}
+              onRenameCell={onRenameCell}
+              onAddColumn={onAddColumn}
+              onDeleteColumn={onDeleteColumn}
+              onRenameColumn={onRenameColumn}
+            />
+          </div>
+        </section>
       </div>
-      <DraggableTable
-        rows={rows}
-        columns={columns}
-        onAddRow={onAddRow}
-        onDeleteRow={onDeleteRow}
-        onRenameCell={onRenameCell}
-        onAddColumn={onAddColumn}
-        onDeleteColumn={onDeleteColumn}
-        onRenameColumn={onRenameColumn}
-      />
     </div>
   );
 };

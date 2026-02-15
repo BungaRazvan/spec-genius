@@ -415,6 +415,36 @@ export const DraggableTable = (props) => {
                 </div>
               </div>
             </PopoverContent>
+            <PopoverContent
+              side="right"
+              align="start"
+              sideOffset={10}
+              className="w-60 shadow-xl border-slate-200 p-4 bg-white"
+            >
+              <div className="space-y-3">
+                <div>
+                  <h4 className="font-semibold text-sm">Cell Properties</h4>
+                  <p className="text-[11px] text-muted-foreground">
+                    Apply custom data constraints.
+                  </p>
+                </div>
+                <hr />
+                <div className="space-y-2">
+                  <div className="flex items-center space-x-2">
+                    <Checkbox id="pii" />
+                    <label htmlFor="pii" className="text-xs font-medium">
+                      Contains PII
+                    </label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Checkbox id="e2e" />
+                    <label htmlFor="e2e" className="text-xs font-medium">
+                      End-to-end Encryption
+                    </label>
+                  </div>
+                </div>
+              </div>
+            </PopoverContent>
           </Popover>
         </div>
       );
