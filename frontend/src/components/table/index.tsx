@@ -21,7 +21,7 @@ import {
 import { InsertColumnZone } from "./InsertColumnZone";
 import { InsertRowZone } from "./InsertRowZone";
 import clsx from "clsx";
-import EditableCell from "./EditableCell";
+import { EditableCell } from "./EditableCell";
 import { SortableRow } from "./SortableRow";
 import { SortableHeader } from "./SortableHeader";
 
@@ -193,6 +193,7 @@ export const DynamicWidget = (props) => {
       [columns],
     ),
     getCoreRowModel: getCoreRowModel(),
+    getRowId: (row) => row.id,
   });
 
   // For the widget, we usually only care about the first data object
