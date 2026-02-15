@@ -171,7 +171,6 @@ const SpecificationDocument = () => {
               columns={[
                 { id: "namespace", header: "Namespace" },
                 { id: "encoding", header: "Encoding" },
-
                 { id: "delimiter", header: "Delimiter" },
                 { id: "quoteChar", header: "Quote Char" },
               ]}
